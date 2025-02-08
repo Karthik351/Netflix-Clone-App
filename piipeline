@@ -15,12 +15,12 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/Aj7Ay/Netflix-clone.git'
+                git branch: 'main', url: 'https://github.com/Karthik351/Netflix-Clone-App.git'
             }
         }
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('sonar-server') {
+                withSonarQubeEnv('sonar-scanner') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
                     -Dsonar.projectKey=Netflix '''
                 }
@@ -29,7 +29,7 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-scanner'
                 }
             }
         }
@@ -52,22 +52,22 @@ pipeline {
         stage("Docker Build & Push") {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build --build-arg TMDB_V3_API_KEY=Aj7ay86fe14eca3e76869b92 -t netflix ."
-                        sh "docker tag netflix sevenajay/netflix:latest"
-                        sh "docker push sevenajay/netflix:latest"
+                    withDockerRegistry(credentialsId: 'docker-jenkins', toolName: 'docker') {
+                        sh "docker build --build-arg TMDB_V3_API_KEY=c4b4409d51084c1145d3d13dc796a669 -t netflix ."
+                        sh "docker tag netflix karthik3513/netflix:latest"
+                        sh "docker push karthik3513/netflix:latest"
                     }
                 }
             }
         }
         stage("Trivy Image Scan") {
             steps {
-                sh "trivy image sevenajay/netflix:latest > trivyimage.txt"
+                sh "trivy image karthik3513/netflix:latest > trivyimage.txt"
             }
         }
         stage('Deploy to Container') {
             steps {
-                sh 'docker run -d --name netflix -p 8081:80 sevenajay/netflix:latest'
+                sh 'docker run -d --name netflix -p 8081:80 karthik3513/netflix:latest'
             }
         }
     }
@@ -78,7 +78,7 @@ pipeline {
                 body: "Project: ${env.JOB_NAME}<br/>" +
                     "Build Number: ${env.BUILD_NUMBER}<br/>" +
                     "URL: ${env.BUILD_URL}<br/>",
-                to: 'postbox.aj99@gmail.com',
+                to: 'jayakarthikms@gmail.com',
                 attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
         }
     }
